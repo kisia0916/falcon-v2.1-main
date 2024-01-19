@@ -1,0 +1,22 @@
+{
+  "name": "falcon-v2.2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "server": "ts-node ./server/serverMain.ts",
+    "client": "ts-node ./client/clientMain.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "net": "^1.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.7",
+    "ts-node": "^10.9.2"
+  }
+}
