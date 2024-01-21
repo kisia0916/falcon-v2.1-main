@@ -7,11 +7,11 @@ export const mainClient = new net.Socket()
 export const dataClient = new net.Socket()
 
 // const HOST = "0.tcp.jp.ngrok.io"
-// const PORT = 16224
+// const PORT = 12971
 const HOST = "localhost"
 const PORT = 3000
-const sendFile = "./testFiles/munchkin007.jpg"
-const writeFile = "./testFiles/getData.jpg"
+let sendFile:string = "./testFiles/munchkin007.jpg"
+let writeFile:string = "./testFiles/getData.jpg"
 
 
 interface getDataInterFace{
@@ -31,12 +31,13 @@ export const sendDataSplitSize = 20480
 export let rastPacketSize:number = 0
 export let splitDataListLength:number = 0
 export let packetCounter:number = 0
+export let systemMode:"upload"|"download"|undefined = "upload"
 
 
 mainClient.on("data",(data:string)=>{
     const getData:getDataInterFace = JSON.parse(data)
     if (getData.type === "first_send"){
-        mainClient.write(setFormat("send_client_info","mainClient",{data:"mainClient"}))
+        mainClient.write(setFormat("send_client_info","mainClient",{data:"mainClient",systemMode:systemMode}))
     }else if (getData.type === "send_server_userId"){
         userId = getData.data
         console.log(`my userId is ${userId}`)
@@ -44,7 +45,7 @@ mainClient.on("data",(data:string)=>{
         targetsInfo.mainTarget = fs.readFileSync("./testFiles/target.txt","utf-8")
         if (targetsInfo.mainTarget){
             console.log("ターゲットを読み込みました")
-            mainClient.write(setFormat("send_main_target","mainClient",targetsInfo.mainTarget))
+            mainClient.write(setFormat("send_main_target","mainClient",{mainTarget:targetsInfo.mainTarget}))
         }else{
             //ターゲットがないときにdataClientを接続させる
             dataClient.connect(PORT,HOST,()=>{
@@ -56,20 +57,45 @@ mainClient.on("data",(data:string)=>{
         targetsInfo.subTarget = getData.data
         console.log("reqestを受け取りました")
         mainClient.write(setFormat("done_connection_mainTarget","mainClient",targetsInfo.subTarget))
-    }else if (getData.type === "start_upload"){
-        console.log("リクエストが成功しました")
-        dataClient.connect(PORT,HOST,()=>{
-            console.log("dataClient connected server!")
-        })
-    }else if (getData.type === "send_next_reqest"){
-        NextSendFile()
-    }else if (getData.type === "send_rast_packet_size_mainTarget"){
-        rastPacketSize = getData.data.rastPacketSize
-        splitDataListLength = getData.data.splitDataListLength
-        console.log(`rast packet size is ${rastPacketSize}`)
-        mainClient.write(setFormat("start_send_packet","mainClient","done"))
-    }else if (getData.type === "start_send_packet_2"){
-        NextSendFile()
+    }else if (systemMode === "upload"){
+        if (getData.type === "start_upload"){
+            console.log("リクエストが成功しました")
+            dataClient.connect(PORT,HOST,()=>{
+                console.log("dataClient connected server!")
+            })
+        }else if (getData.type === "send_next_reqest"){
+            NextSendFile()
+        }else if (getData.type === "send_rast_packet_size_mainTarget"){
+            rastPacketSize = getData.data.rastPacketSize
+            splitDataListLength = getData.data.splitDataListLength
+            console.log(`rast packet size is ${rastPacketSize}`)
+            mainClient.write(setFormat("start_send_packet","mainClient","done"))
+        }else if (getData.type === "start_send_packet_2"){
+            NextSendFile()
+        }
+    }else if (systemMode === "download"){
+        if (getData.type === "start_download"){
+            console.log("downloadを開始します")
+            dataClient.connect(PORT,HOST,()=>{
+                console.log("dataClient connected server!")
+            })
+        }else if (getData.type === "send_download_path_sub"){
+            sendFile = getData.data
+            console.log("downloadのファイル送信の準備開始")
+            firstSendSetting(sendFile)
+
+        }else if (getData.type === "send_rast_packet_size_subTarget"){
+            console.log(getData.data)
+            rastPacketSize = getData.data.rastPacketSize
+            splitDataListLength = getData.data.splitDataListLength
+            console.log(`rast packet size is ${rastPacketSize}`)
+            mainClient.write(setFormat("start_send_packet","mainClient","done"))
+        }else if (getData.type === "start_send_packet_2"){
+            console.log("うけとり")
+            NextSendFile()
+        }else if (getData.type === "send_next_reqest"){
+            NextSendFile()
+        }
     }
 })
 
@@ -80,10 +106,15 @@ dataClient.on("data",(data:string)=>{
     if (dataClientFirstFlg){
         getData = JSON.parse(data)
         if (getData.type === "first_send"){
-            dataClient.write(setFormat("send_client_info","dataClient",{data:"dataClient",userId:userId}))
+            dataClient.write(setFormat("send_client_info","dataClient",{data:"dataClient",userId:userId,systemMode:systemMode}))
         }else if (getData.type === "conection_done_dataClient"){
-            if (targetsInfo.mainTarget){
-                firstSendSetting(sendFile)   
+            if (systemMode === "upload"){
+                if (targetsInfo.mainTarget){
+                    
+                    firstSendSetting(sendFile)   
+                }
+            }else if (systemMode === "download"){
+                mainClient.write(setFormat("send_download_path_main","mainClient",sendFile))
             }
             dataClientFirstFlg = false//ここでもうjsonデータは受け取れなくなる
         }
