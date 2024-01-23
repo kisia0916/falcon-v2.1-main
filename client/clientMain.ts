@@ -27,7 +27,7 @@ interface targetsInfoInterface {
 let userId:string = ""
 let targetsInfo:targetsInfoInterface = {mainTarget:"",subTarget:""}//mainは自分から接続しに行ったクライアントでsubは相手から接続してきたクライアント
 
-export const sendDataSplitSize = 20480
+export const sendDataSplitSize = 2048000
 export let rastPacketSize:number = 0
 export let splitDataListLength:number = 0
 export let packetCounter:number = 0
