@@ -31,11 +31,14 @@ export const NextSendFile = ()=>{
     if (splitDataCounter+1 !== splitNum){
         fs.read(fileFd,buffer,0,sendDataSplitSize,splitDataCounter*sendDataSplitSize,(err, bytesRead, buffer)=>{
             sendData(buffer)
+            console.log(splitDataCounter*sendDataSplitSize)
         })
     }else{
         buffer = Buffer.alloc(rastPacketSize)
         fs.read(fileFd,buffer,0,rastPacketSize,splitDataCounter*sendDataSplitSize,(err, bytesRead, buffer)=>{
             sendData(buffer)
+            console.log(splitDataCounter*sendDataSplitSize)
+
         })
     }
 }

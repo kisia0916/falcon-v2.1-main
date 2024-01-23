@@ -7,7 +7,7 @@ export const mainClient = new net.Socket()
 export const dataClient = new net.Socket()
 
 // const HOST = "0.tcp.jp.ngrok.io"
-// const PORT = 10896
+// const PORT = 17745
 const HOST = "localhost"
 const PORT = 3000
 let sendFile:string = "./testFiles/sendData.jpg"
