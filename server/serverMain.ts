@@ -26,7 +26,7 @@ export interface rastPacketInfoInterface {
 }
 
 export let clientList:clientListInterface[] = []
-export const sendDataSplitSize = 2048000
+export const sendDataSplitSize = 102400
 
 
 

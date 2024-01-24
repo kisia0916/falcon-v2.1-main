@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "server": "ts-node ./server/serverMain.ts",
-    "client": "ts-node ./client/clientMain.ts"
+    "client": "ts-node ./client/clientMain.ts",
+    "ani":"ts-node ./client/textLog.ts"
   },
   "keywords": [],
   "author": "",

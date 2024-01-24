@@ -2,6 +2,7 @@ import * as net from "net"
 import * as fs from "fs"
 import { setFormat } from "../protocol/sendFormat"
 import { NextSendFile, firstSendSetting} from "./sendFile"
+import { loadTextAniRun } from "./textLog"
 
 export const mainClient = new net.Socket()
 export const dataClient = new net.Socket()
@@ -10,8 +11,8 @@ export const dataClient = new net.Socket()
 // const PORT = 17745
 const HOST = "localhost"
 const PORT = 3000
-let sendFile:string = "./testFiles/sendData.jpg"
-let writeFile:string = "./testFiles/getData.jpg"
+let sendFile:string = "./testFiles/sendData.exe"
+let writeFile:string = "./testFiles/getData.exe"
 
 
 interface getDataInterFace{
@@ -27,7 +28,7 @@ interface targetsInfoInterface {
 let userId:string = ""
 let targetsInfo:targetsInfoInterface = {mainTarget:"",subTarget:""}//mainは自分から接続しに行ったクライアントでsubは相手から接続してきたクライアント
 
-export const sendDataSplitSize = 2048000
+export const sendDataSplitSize = 102400
 export let rastPacketSize:number = 0
 export let splitDataListLength:number = 0
 export let packetCounter:number = 0
@@ -120,7 +121,7 @@ dataClient.on("data",(data:string)=>{
         }
     }else{
         console.log("subTargetからデータを受け取りました")
-    console.log(Buffer.isBuffer(data))
+        console.log(Buffer.isBuffer(data))
         getDataCacheList.push(data)
         console.log(Buffer.concat(getDataCacheList).length)
         console.log(Buffer.concat(getDataCacheList).length)
@@ -149,6 +150,9 @@ dataClient.on("data",(data:string)=>{
     }
 })
 
+export let doneConnectionFlg:boolean = false
+loadTextAniRun(`Connecting to ${HOST}:${PORT}`)
 mainClient.connect(PORT,HOST,()=>{
-    console.log("mainClient connected server!")
+    doneConnectionFlg = true
+    console.log(`${"Connecting to localhost:3000"}`+"\x1b[32m done"+"\x1b[39m")
 })
