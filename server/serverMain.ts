@@ -3,6 +3,7 @@ import * as fs from "fs"
 import * as uuid from "uuid"
 import { setFormat } from "../protocol/sendFormat"
 import { dataClientFun } from "./dataClientFuns"
+import { cmdAnalyzeServer } from "./cmdAnalyze"
 
 const PORT = 3000
 
@@ -56,17 +57,23 @@ server.on("connection",(socket)=>{
                     userId = uuid.v4()
                     systemMode = getData.data.systemMode
                     clientList.push({userId:userId,mainClientSocket:socket,dataClientSocket:undefined,targetInfo:{mainTarget:"",subTarget:""},rastPacketInfo:{rastPacketSize:0,splitDataListLength:0}})
-                    socket.write(setFormat("send_server_userId","server",userId))
+                    let userList:any = []
+                    clientList.forEach((i)=>{
+                        if (i.userId !== userId){
+                            userList.push({userId:i.userId})
+                        }
+                    })
+                    socket.write(setFormat("send_server_userId","server",{userId:userId,userList:userList}))
                 }else if (getData.data.data === "dataClient"){
                     console.log("動いてるよ")
                     const clientIndex = clientList.findIndex((i)=>i.userId === getData.data.userId)
-                    systemMode = getData.data.systemMode
+                    // systemMode = getData.data.systemMode
                     if (clientIndex !== -1){
                         mainClientId = getData.data.userId
                         clientList[clientIndex].dataClientSocket = socket
                         targetsInfo = clientList[clientIndex].targetInfo//dataClientにターゲットの情報を設定
                         changeJsonFlg = false//データをjsonに変換させないようにする
-                        socket.write(setFormat("conection_done_dataClient","server","done"))
+                        socket.write(setFormat("done_first_settings","server","done"))
                     }
                 }
             }else if (getData.type === "send_main_target"){
@@ -83,11 +90,21 @@ server.on("connection",(socket)=>{
                     console.log("リクエストを送信しました")
                     clientList[mainTargetIndex].mainClientSocket.write(setFormat("send_conection_reqest_mainTarget","server",userId))
                 }
+            }else if (getData.type === "start_get_cmd"){
+                const subTargetIndex = clientList.findIndex((i)=>i.userId === getData.data)
+                targetsInfo.subTarget = getData.data
+                clientList[subTargetIndex].mainClientSocket.write(setFormat("start_get_cmd_mainTarget","server","start"))
+            }else if (getData.type === "done_connection_mainTarget_upload"){
+                const subTargetIndex = clientList.findIndex((i)=>i.userId === getData.data)
+                // targetsInfo.subTarget = getData.data
+                systemMode = "upload"
+                socket.write(setFormat("start_upload","server","start"))
             }else if (systemMode === "upload"){
-                if (getData.type === "done_connection_mainTarget"){
-                    const subTargetIndex = clientList.findIndex((i)=>i.userId === getData.data)
-                    targetsInfo.subTarget = getData.data
-                    clientList[subTargetIndex].mainClientSocket.write(setFormat("start_upload","server","start"))
+                if (getData.type === "send_conection_done_dataClient"){
+                    const myIndex = clientList.findIndex((i)=>i.userId === userId)
+                    if (myIndex !== -1){
+                        clientList[myIndex].dataClientSocket.write(setFormat("conection_done_dataClient","server","done"))
+                    }
                 }else if (getData.type === "done_write_mainTargetFile"){
                     console.log("jkfldsjaklfjdasoiejfoiw")
                     console.log(targetsInfo)

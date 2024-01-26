@@ -1,13 +1,14 @@
-import { doneConnectionFlg } from "./clientMain";
+import { doneFlg, setDoneFlg } from "./clientMain";
 import { nowSendedSize } from "./sendFile";
+
 
 process.stdout.write( "\x1b[?25l" );
 process.on("exit", ()=>process.stdout.write( "\x1b[?25h" ));
 process.on("SIGINT", ()=>process.exit(0));
-
 //
 let loadContents = [ "｜","／","―","＼"];
 let loadContentsCounter = 0
+let a = 0
 const loadTextAni = (beforeText:string,done:boolean)=>{
     if (!done){
         process.stdout.write(`${beforeText}${loadContents[loadContentsCounter]}\r`)
@@ -16,10 +17,13 @@ const loadTextAni = (beforeText:string,done:boolean)=>{
             loadContentsCounter = 0
         }
     setTimeout(()=>loadTextAniRun(beforeText),40)
+    }else{
+        setDoneFlg(false)
     }
 }
 export const loadTextAniRun = (beforeText:string)=>{
-    setTimeout(()=>loadTextAni(beforeText,doneConnectionFlg),40)
+
+    setTimeout(()=>loadTextAni(beforeText,doneFlg),40)
 }
 //
 const loadBoxNum = 20
@@ -52,5 +56,11 @@ export const readRateAniRun = (beforeText:string,maxSize:number)=>{
     maxSizeMain = maxSize
     setTimeout(()=>readRateAni(beforeText),10)
 }
-// readRateAniRun("lll")
-// loadTextAniRun("loading...")
+
+export const writeClientList = (userList:any)=>{
+    let writeList:any = []
+    userList.map((i:any)=>{
+        writeList.push({client:i.name,state:i.state,locked:i.locked})
+    })
+    console.table(writeList)
+}
